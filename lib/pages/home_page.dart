@@ -16,10 +16,6 @@ class _HomePageState extends State<HomePage> {
   int _selectedIndex = -1;
 
   // Method to update the selected index
-/*************  ✨ Codeium Command ⭐  *************/
-  /// Taps a tile in the main settings menu, and updates the state so that
-  /// the corresponding page is displayed.
-/******  f5d5209b-8bed-4d39-9944-2d9d46803f46  *******/
   void _onTileTapped(int index) {
     setState(() {
       _selectedIndex = index;
@@ -49,42 +45,35 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _buildMainSettingsMenu() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+    return ListView(
       children: [
-        Expanded(
-          child: ListView(
-            children: [
-              BootsSettingsTile(
-                icon: Icons.thermostat,
-                iconContainerColor: Colors.orange,
-                settingsTitle: "Heating",
-                settingsSubtitle: "Temp: 70°F | Heating: On",
-                onTap: () => _onTileTapped(0),
-              ),
-              BootsSettingsTile(
-                icon: Icons.battery_charging_full,
-                iconContainerColor: Colors.green,
-                settingsTitle: "Battery",
-                settingsSubtitle: "Level: 100% | Charging: Yes",
-                onTap: () => _onTileTapped(1),
-              ),
-              BootsSettingsTile(
-                icon: Icons.power_settings_new,
-                iconContainerColor: Colors.red,
-                settingsTitle: "Power",
-                settingsSubtitle: "Power: On",
-                onTap: () => _onTileTapped(2),
-              ),
-              BootsSettingsTile(
-                icon: Icons.bluetooth,
-                iconContainerColor: Colors.blue,
-                settingsTitle: "Bluetooth",
-                settingsSubtitle: "Connected: Yes",
-                onTap: () => _onTileTapped(3),
-              ),
-            ],
-          ),
+        BootsSettingsTile(
+          icon: Icons.thermostat,
+          iconContainerColor: Colors.orange,
+          settingsTitle: "Heating",
+          settingsSubtitle: "Temp: 70°F | Heating: On",
+          onTap: () => _onTileTapped(0),
+        ),
+        BootsSettingsTile(
+          icon: Icons.battery_charging_full,
+          iconContainerColor: Colors.green,
+          settingsTitle: "Battery",
+          settingsSubtitle: "Level: 100% | Charging: Yes",
+          onTap: () => _onTileTapped(1),
+        ),
+        BootsSettingsTile(
+          icon: Icons.power_settings_new,
+          iconContainerColor: Colors.red,
+          settingsTitle: "Power",
+          settingsSubtitle: "Power: On",
+          onTap: () => _onTileTapped(2),
+        ),
+        BootsSettingsTile(
+          icon: Icons.bluetooth,
+          iconContainerColor: Colors.blue,
+          settingsTitle: "Bluetooth",
+          settingsSubtitle: "Connected: Yes",
+          onTap: () => _onTileTapped(3),
         ),
       ],
     );
@@ -121,32 +110,37 @@ class _HomePageState extends State<HomePage> {
             ),
             Expanded(
               child: Container(
-                padding: const EdgeInsets.all(20),
-                color: Colors.grey[200],
+                padding: const EdgeInsets.only(top: 12, left: 20, right: 20, bottom: 12),
+                decoration: BoxDecoration(
+                  color: Colors.grey[200],
+                  borderRadius: const BorderRadius.only(
+                    topLeft: Radius.circular(30), // Adjust the radius as needed
+                    topRight: Radius.circular(30),
+                  ),
+                ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Consistent Title Container for Alignment
                     Container(
-                      height: 50, // Fixed height for consistent alignment
+                      height: 50,
                       child: Row(
                         children: [
-                          if (_selectedIndex != -1) // Show back button on setting pages
+                          if (_selectedIndex != -1)
                             IconButton(
-                              icon: Icon(Icons.arrow_back),
+                              icon: const Icon(Icons.arrow_back),
                               onPressed: _goBack,
                             ),
                           Text(
                             _selectedIndex == -1
                                 ? "Boots Settings"
                                 : _selectedIndex == 0
-                                    ? "Heating Settings"
+                                    ? "Heating"
                                     : _selectedIndex == 1
-                                        ? "Battery Settings"
+                                        ? "Battery"
                                         : _selectedIndex == 2
-                                            ? "Power Settings"
-                                            : "Bluetooth Settings",
-                            style: TextStyle(
+                                            ? "Power"
+                                            : "Bluetooth",
+                            style: const TextStyle(
                               fontSize: 20,
                               fontWeight: FontWeight.bold,
                             ),
@@ -163,7 +157,7 @@ class _HomePageState extends State<HomePage> {
                         transitionBuilder: (Widget child, Animation<double> animation) {
                           return SlideTransition(
                             position: Tween<Offset>(
-                              begin: const Offset(1.0, 0.0), // Slide in from right
+                              begin: const Offset(1.0, 0.0),
                               end: Offset.zero,
                             ).animate(animation),
                             child: child,

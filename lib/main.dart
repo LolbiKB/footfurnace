@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart'; // Import Provider
 import 'package:footfurnace/theme/theme.dart';
 import 'package:footfurnace/pages/home_page.dart';
+import 'package:footfurnace/providers/bluetooth_manager.dart'; // Import BluetoothManager
 
 void main() {
   runApp(const MyApp());
@@ -9,14 +11,18 @@ void main() {
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      home: HomePage(),
-      theme: lightTheme(),
-      darkTheme: darkTheme(),
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => BluetoothManager()), // Provide BluetoothManager
+      ],
+      child: MaterialApp(
+        debugShowCheckedModeBanner: false,
+        home: const HomePage(),
+        theme: lightTheme(),
+        darkTheme: darkTheme(),
+      ),
     );
   }
 }
