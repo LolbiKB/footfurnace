@@ -22,7 +22,7 @@ class BluetoothManager extends ChangeNotifier {
         _characteristics.addAll(service.characteristics);
       }
 
-      _statusMessage = "Connected to ${device.name}";
+      _statusMessage = "Connected to ${device.platformName}";
       notifyListeners();
     } catch (e) {
       _statusMessage = "Failed to connect: $e";
@@ -44,7 +44,7 @@ class BluetoothManager extends ChangeNotifier {
     try {
       List<int> value = await characteristic.read();
       String message = String.fromCharCodes(value);
-      _statusMessage = "Read: $message";
+      _statusMessage = message;
       notifyListeners();
     } catch (e) {
       _statusMessage = "Error reading characteristic: $e";

@@ -157,36 +157,38 @@ class _BluetoothSettingsPageState extends State<BluetoothSettingsPage> {
   }
 
   Widget _buildTile({
-    required String title,
-    required String subtitle,
-    required VoidCallback onTap,
-  }) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 10.0),
-      child: Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: ListTile(
-          onTap: onTap,
-          leading: ClipRRect(
-            borderRadius: BorderRadius.circular(5),
-            child: Container(
-              padding: const EdgeInsets.all(10),
-              color: Colors.blue,
-              child: const Icon(Icons.smartphone, color: Colors.white, size: 30),
-            ),
-          ),
-          title: Text(
-            title,
-            style: const TextStyle(fontWeight: FontWeight.bold),
-          ),
-          subtitle: Text(subtitle),
-        ),
+  required String title,
+  String? subtitle, // Optional subtitle
+  required VoidCallback onTap,
+  IconData icon = Icons.smartphone, // Default icon
+  Color iconColor = Colors.blue, // Customizable icon color
+}) {
+  return Padding(
+    padding: const EdgeInsets.only(bottom: 10.0),
+    child: Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
       ),
-    );
-  }
+      child: ListTile(
+        onTap: onTap,
+        leading: ClipRRect(
+          borderRadius: BorderRadius.circular(5),
+          child: Container(
+            padding: const EdgeInsets.all(10),
+            color: iconColor,
+            child: Icon(icon, color: Colors.white, size: 30),
+          ),
+        ),
+        title: Text(
+          title,
+          style: const TextStyle(fontWeight: FontWeight.bold),
+        ),
+        subtitle: subtitle != null ? Text(subtitle) : null, // Display only if subtitle is provided
+      ),
+    ),
+  );
+}
 
   @override
   Widget build(BuildContext context) {
@@ -202,8 +204,8 @@ class _BluetoothSettingsPageState extends State<BluetoothSettingsPage> {
               itemBuilder: (context, index) {
                 BluetoothCharacteristic characteristic = _characteristics[index];
                 return _buildTile(
+                  icon: Icons.data_object,
                   title: "Characteristic: ${characteristic.uuid}",
-                  subtitle: "Properties: ${characteristic.properties}",
                   onTap: () => _readCharacteristic(characteristic),
                 );
               },
