@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:footfurnace/providers/bluetooth_manager.dart';
+import 'package:provider/provider.dart';
 import 'package:footfurnace/components/boots_settings_tile.dart';
 import 'package:footfurnace/pages/heating_settings_page.dart';
 import 'package:footfurnace/pages/battery_settings_page.dart';
@@ -45,34 +47,54 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _buildMainSettingsMenu() {
+    final bluetoothManager = context.watch<BluetoothManager>();
+
+    // Default values for when no connection is detected
+    final defaultHeating = {'temperature': '--', 'heatingStatus': 'OFF'};
+    final defaultBattery = {'batteryLevel': '--', 'chargingStatus': false};
+    final defaultPower = {'powerStatus': '--'};
+
+    final heatingData = bluetoothManager.heatingData.isNotEmpty
+        ? bluetoothManager.heatingData
+        : defaultHeating;
+    final batteryData = bluetoothManager.batteryData.isNotEmpty
+        ? bluetoothManager.batteryData
+        : defaultBattery;
+    final powerData = bluetoothManager.powerData.isNotEmpty
+        ? bluetoothManager.powerData
+        : defaultPower;
+
     return ListView(
       children: [
         BootsSettingsTile(
           icon: Icons.thermostat,
           iconContainerColor: Colors.orange,
           settingsTitle: "Heating",
-          settingsSubtitle: "Temp: 70°F | Heating: On",
+          settingsSubtitle:
+              "Temp: ${heatingData['temperature']}°C | Heating: ${heatingData['heatingStatus']}",
           onTap: () => _onTileTapped(0),
         ),
         BootsSettingsTile(
           icon: Icons.battery_charging_full,
           iconContainerColor: Colors.green,
           settingsTitle: "Battery",
-          settingsSubtitle: "Level: 100% | Charging: Yes",
+          settingsSubtitle:
+              "Level: ${batteryData['batteryLevel']}% | Charging: ${batteryData['chargingStatus'] == true ? 'Yes' : 'No'}",
           onTap: () => _onTileTapped(1),
         ),
         BootsSettingsTile(
           icon: Icons.power_settings_new,
           iconContainerColor: Colors.red,
           settingsTitle: "Power",
-          settingsSubtitle: "Power: On",
+          settingsSubtitle: "Power: ${powerData['powerStatus']}",
           onTap: () => _onTileTapped(2),
         ),
         BootsSettingsTile(
           icon: Icons.bluetooth,
           iconContainerColor: Colors.blue,
           settingsTitle: "Bluetooth",
-          settingsSubtitle: "Connected: Yes",
+          settingsSubtitle:
+              "Connected: ${bluetoothManager.connectedDevice != null ? 'Yes' : 'No'}",
           onTap: () => _onTileTapped(3),
         ),
       ],
@@ -110,7 +132,8 @@ class _HomePageState extends State<HomePage> {
             ),
             Expanded(
               child: Container(
-                padding: const EdgeInsets.only(top: 12, left: 20, right: 20, bottom: 12),
+                padding: const EdgeInsets.only(
+                    top: 12, left: 20, right: 20, bottom: 12),
                 decoration: BoxDecoration(
                   color: Colors.grey[200],
                   borderRadius: const BorderRadius.only(
@@ -154,7 +177,8 @@ class _HomePageState extends State<HomePage> {
                         duration: const Duration(milliseconds: 250),
                         switchInCurve: Curves.easeInOut,
                         switchOutCurve: Curves.easeInOut,
-                        transitionBuilder: (Widget child, Animation<double> animation) {
+                        transitionBuilder:
+                            (Widget child, Animation<double> animation) {
                           return SlideTransition(
                             position: Tween<Offset>(
                               begin: const Offset(1.0, 0.0),
