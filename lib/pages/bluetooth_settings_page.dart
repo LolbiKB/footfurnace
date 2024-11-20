@@ -18,7 +18,6 @@ class _BluetoothSettingsPageState extends State<BluetoothSettingsPage> {
   List<BluetoothCharacteristic> _characteristics = [];
   String _statusMessage = "Checking Bluetooth status...";
   bool _showDetails = false; // Toggle for showing details
-  bool _isScanning = false; // Track scanning state
   late StreamSubscription _adapterStateSubscription;
   late StreamSubscription _scanResultsSubscription;
   late StreamSubscription _isScanningSubscription;
@@ -168,42 +167,6 @@ class _BluetoothSettingsPageState extends State<BluetoothSettingsPage> {
     _scanResultsSubscription.cancel();
     _isScanningSubscription.cancel();
     super.dispose();
-  }
-
-  Widget _buildTile({
-    required String title,
-    String? subtitle, // Optional subtitle
-    required VoidCallback onTap,
-    IconData icon = Icons.smartphone, // Default icon
-    Color iconColor = Colors.blue, // Customizable icon color
-  }) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 10.0),
-      child: Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: ListTile(
-          onTap: onTap,
-          leading: ClipRRect(
-            borderRadius: BorderRadius.circular(5),
-            child: Container(
-              padding: const EdgeInsets.all(10),
-              color: iconColor,
-              child: Icon(icon, color: Colors.white, size: 30),
-            ),
-          ),
-          title: Text(
-            title,
-            style: const TextStyle(fontWeight: FontWeight.bold),
-          ),
-          subtitle: subtitle != null
-              ? Text(subtitle)
-              : null, // Display only if subtitle is provided
-        ),
-      ),
-    );
   }
 
   @override
