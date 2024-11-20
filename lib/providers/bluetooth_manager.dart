@@ -115,31 +115,21 @@ Future<void> _readAndStoreCharacteristicValue(
     List<int> value = await characteristic.read();
     final data = String.fromCharCodes(value);
 
-    // Log the UUID and data for debugging
-    print("Initial value of ${characteristic.uuid}: $data");
-
     // Check and log UUID comparison for debugging
     final uuid = characteristic.uuid.toString().toUpperCase();
     if (uuid == _batteryUUID.toUpperCase()) {
-      print("This is the Battery Characteristic");
       _batteryData = _parseCharacteristicData(data);
-      print("Battery data: $_batteryData");
     } else if (uuid == _heatingUUID.toUpperCase()) {
-      print("This is the Heating Characteristic");
-      _heatingData = _parseCharacteristicData(data);
-      print("Heating data: $_heatingData");
+      _heatingData = _parseCharacteristicData(data);;
     } else if (uuid == _powerUUID.toUpperCase()) {
-      print("This is the Power Characteristic");
       _powerData = _parseCharacteristicData(data);
-      print("Power data: $_powerData");
     } else {
-      print("Unknown UUID: $uuid");
     }
 
     // Notify listeners of updates
     notifyListeners();
   } catch (e) {
-    print("Error reading characteristic ${characteristic.uuid}: $e");
+    print("Error reading characteristic: $e");
   }
 }
 
@@ -147,11 +137,9 @@ Future<void> _readAndStoreCharacteristicValue(
   // Subscribe to a characteristic and parse data
 void _subscribeToCharacteristic(
     BluetoothCharacteristic characteristic, String characteristicName) {
-  print("Subscribing to $characteristicName updates...");
   characteristic.setNotifyValue(true).then((_) {
     final subscription = characteristic.onValueReceived.listen((value) {
       final data = String.fromCharCodes(value);
-      print("$characteristicName value updated: $data");
 
       // Update specific data based on the characteristic
       switch (characteristicName) {
@@ -164,8 +152,6 @@ void _subscribeToCharacteristic(
         case "Power":
           _powerData = _parseCharacteristicData(data);
           break;
-        default:
-          print("Unknown characteristic: $characteristicName");
       }
       notifyListeners();
     });
@@ -210,10 +196,8 @@ void _subscribeToCharacteristic(
     try {
       List<int> value = await characteristic.read();
       String message = String.fromCharCodes(value);
-      print("Read value: $message");
       notifyListeners();
     } catch (e) {
-      print("Error reading characteristic: $e");
       notifyListeners();
     }
   }
