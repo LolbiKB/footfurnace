@@ -178,7 +178,7 @@ class _HomePageState extends State<HomePage> {
                     const SizedBox(height: 10),
                     Expanded(
                       child: AnimatedSwitcher(
-                        duration: const Duration(milliseconds: 250),
+                        duration: const Duration(milliseconds: 200),
                         switchInCurve: Curves.easeInOut,
                         switchOutCurve: Curves.easeInOut,
                         transitionBuilder:

@@ -7,6 +7,7 @@ class BootsSettingsTile extends StatelessWidget {
   final String settingsSubtitle;
   final VoidCallback? onTap;
   final Widget? trailing; // Optional trailing widget
+  final bool isLoading; // Loading state
 
   const BootsSettingsTile({
     super.key,
@@ -16,6 +17,7 @@ class BootsSettingsTile extends StatelessWidget {
     required this.settingsSubtitle,
     this.onTap,
     this.trailing,
+    this.isLoading = false, // Default is not loading
   });
 
   @override
@@ -23,27 +25,59 @@ class BootsSettingsTile extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.only(bottom: 10.0),
       child: GestureDetector(
-        onTap: onTap, // This makes the tile clickable
+        onTap: isLoading ? null : onTap, // Disable interaction if loading
         child: Container(
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: isLoading ? Colors.grey[200] : Colors.white, // Subtle change when loading
             borderRadius: BorderRadius.circular(16),
           ),
           child: ListTile(
-            leading: ClipRRect(
-              borderRadius: BorderRadius.circular(5),
-              child: Container(
-                padding: const EdgeInsets.all(10),
-                color: iconContainerColor,
-                child: Icon(icon, color: Colors.white, size: 30),
-              ),
-            ),
-            title: Text(
-              settingsTitle,
-              style: const TextStyle(fontWeight: FontWeight.bold),
-            ),
-            subtitle: Text(settingsSubtitle),
-            trailing: trailing,
+            leading: isLoading
+                ? ClipRRect(
+                    borderRadius: BorderRadius.circular(5),
+                    child: Container(
+                      padding: const EdgeInsets.all(10),
+                      color: Colors.grey[300],
+                      child: const CircularProgressIndicator(
+                        strokeWidth: 2.5,
+                        color: Colors.blue,
+                      ),
+                    ),
+                  )
+                : ClipRRect(
+                    borderRadius: BorderRadius.circular(5),
+                    child: Container(
+                      padding: const EdgeInsets.all(10),
+                      color: iconContainerColor,
+                      child: Icon(icon, color: Colors.white, size: 30),
+                    ),
+                  ),
+            title: isLoading
+                ? Container(
+                    height: 16,
+                    width: double.infinity,
+                    decoration: BoxDecoration(
+                      color: Colors.grey[300],
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                  )
+                : Text(
+                    settingsTitle,
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
+            subtitle: isLoading
+                ? Container(
+                    height: 12,
+                    width: 100,
+                    decoration: BoxDecoration(
+                      color: Colors.grey[300],
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                  )
+                : Text(settingsSubtitle),
+            trailing: isLoading
+                ? null
+                : trailing,
           ),
         ),
       ),

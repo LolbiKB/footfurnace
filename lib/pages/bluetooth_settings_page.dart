@@ -17,7 +17,8 @@ class _BluetoothSettingsPageState extends State<BluetoothSettingsPage> {
   final List<BluetoothDevice> _devicesList = [];
   List<BluetoothCharacteristic> _characteristics = [];
   String _statusMessage = "Checking Bluetooth status...";
-  bool _showDetails = false; // Toggle for showing details
+  bool _showDetails = false;
+  final Map<String, bool> _loadingStates = {};
   late StreamSubscription _adapterStateSubscription;
   late StreamSubscription _scanResultsSubscription;
   late StreamSubscription _isScanningSubscription;
@@ -120,24 +121,33 @@ class _BluetoothSettingsPageState extends State<BluetoothSettingsPage> {
     });
   }
 
-  void _connectToDevice(BluetoothDevice device) async {
-    final bluetoothManager =
-        Provider.of<BluetoothManager>(context, listen: false);
-    try {
-      await bluetoothManager.connectToDevice(device);
+void _connectToDevice(BluetoothDevice device) async {
+  final bluetoothManager =
+      Provider.of<BluetoothManager>(context, listen: false);
+
+  setState(() {
+    _loadingStates[device.remoteId.toString()] = true; // Set the device to loading
+  });
+
+  try {
+    await bluetoothManager.connectToDevice(device);
+
+    setState(() {
+      _statusMessage = "Connected to ${device.platformName}";
+      _characteristics = bluetoothManager.characteristics;
+    });
+  } catch (e) {
+    if (mounted) {
       setState(() {
-        _statusMessage = "Connected to ${device.platformName}";
-        _characteristics = bluetoothManager.characteristics;
-        // print("Characteristics: ${_characteristics.map((c) => c.uuid.toString()).join(", ")}");
+        _statusMessage = "Failed to connect: $e";
       });
-    } catch (e) {
-      if (mounted) {
-        setState(() {
-          _statusMessage = "Failed to connect: $e";
-        });
-      }
     }
+  } finally {
+    setState(() {
+      _loadingStates[device.remoteId.toString()] = false; // Reset loading state
+    });
   }
+}
 
   Future<void> _readCharacteristic(
       BluetoothCharacteristic characteristic) async {
@@ -175,69 +185,72 @@ class _BluetoothSettingsPageState extends State<BluetoothSettingsPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              _statusMessage,
-              style: const TextStyle(fontSize: 16),
-            ),
-            StreamBuilder<bool>(
-              stream: FlutterBluePlus.isScanning,
-              initialData: false,
-              builder: (context, snapshot) {
-                final isScanning = snapshot.data ?? false;
-
-                if (bluetoothManager.connectedDevice != null) {
-                  return ElevatedButton(
-                    onPressed: () async {
-                      final shouldDisconnect = await showDialog<bool>(
-                            context: context,
-                            builder: (context) => AlertDialog(
-                              title: const Text("Disconnect"),
-                              content: const Text(
-                                  "Are you sure you want to disconnect?"),
-                              actions: [
-                                TextButton(
-                                  onPressed: () =>
-                                      Navigator.of(context).pop(false),
-                                  child: const Text("Cancel",
-                                      style: TextStyle(color: Colors.black)),
-                                ),
-                                TextButton(
-                                  onPressed: () =>
-                                      Navigator.of(context).pop(true),
-                                  child: const Text("Confirm",
-                                      style: TextStyle(color: Colors.red)),
-                                ),
-                              ],
-                            ),
-                          ) ??
-                          false;
-
-                      if (shouldDisconnect) {
-                        await bluetoothManager.disconnect();
-                        setState(() {
-                          _statusMessage = bluetoothManager.statusMessage;
-                          _characteristics.clear();
-                          _showDetails =
-                              false; // Reset show details on disconnect
-                        });
-                      }
-                    },
-                    child: const Text("Disconnect",
-                        style: TextStyle(color: Colors.red)),
-                  );
-                } else {
-                  return ElevatedButton(
-                    onPressed: isScanning ? null : _startScan,
-                    child: Text(isScanning ? "Scanning..." : "Scan",
-                        style: const TextStyle(color: Colors.blue)),
-                  );
-                }
-              },
-            ),
-          ],
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 15),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                _statusMessage,
+                style: const TextStyle(fontSize: 16),
+              ),
+              StreamBuilder<bool>(
+                stream: FlutterBluePlus.isScanning,
+                initialData: false,
+                builder: (context, snapshot) {
+                  final isScanning = snapshot.data ?? false;
+          
+                  if (bluetoothManager.connectedDevice != null) {
+                    return ElevatedButton(
+                      onPressed: () async {
+                        final shouldDisconnect = await showDialog<bool>(
+                              context: context,
+                              builder: (context) => AlertDialog(
+                                title: const Text("Disconnect"),
+                                content: const Text(
+                                    "Are you sure you want to disconnect?"),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () =>
+                                        Navigator.of(context).pop(false),
+                                    child: const Text("Cancel",
+                                        style: TextStyle(color: Colors.black)),
+                                  ),
+                                  TextButton(
+                                    onPressed: () =>
+                                        Navigator.of(context).pop(true),
+                                    child: const Text("Confirm",
+                                        style: TextStyle(color: Colors.red)),
+                                  ),
+                                ],
+                              ),
+                            ) ??
+                            false;
+          
+                        if (shouldDisconnect) {
+                          await bluetoothManager.disconnect();
+                          setState(() {
+                            _statusMessage = bluetoothManager.statusMessage;
+                            _characteristics.clear();
+                            _showDetails =
+                                false; // Reset show details on disconnect
+                          });
+                        }
+                      },
+                      child: const Text("Disconnect",
+                          style: TextStyle(color: Colors.red)),
+                    );
+                  } else {
+                    return ElevatedButton(
+                      onPressed: isScanning ? null : _startScan,
+                      child: Text(isScanning ? "Scanning..." : "Scan",
+                          style: const TextStyle(color: Colors.blue)),
+                    );
+                  }
+                },
+              ),
+            ],
+          ),
         ),
         const SizedBox(height: 10),
         StreamBuilder<bool>(
@@ -312,6 +325,8 @@ class _BluetoothSettingsPageState extends State<BluetoothSettingsPage> {
                           : 'Unknown Device',
                       settingsSubtitle: 'ID: ${device.remoteId}',
                       onTap: () => _connectToDevice(device),
+                      isLoading: _loadingStates[device.remoteId.toString()] ??
+                          false, // Check loading state
                     );
                   },
                 ),
