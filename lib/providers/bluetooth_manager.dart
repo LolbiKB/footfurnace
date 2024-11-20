@@ -191,14 +191,30 @@ void _subscribeToCharacteristic(
   }
 
   // Read data from a characteristic
-  Future<void> readCharacteristic(
-      BluetoothCharacteristic characteristic) async {
+Future<dynamic> readCharacteristic(BluetoothCharacteristic characteristic) async {
+  try {
+    // Read raw data
+    List<int> value = await characteristic.read();
+
+    // Convert to readable format
+    String readableData = String.fromCharCodes(value);
+
+    // Attempt to parse as JSON if applicable
+    dynamic parsedData;
     try {
-      List<int> value = await characteristic.read();
-      String message = String.fromCharCodes(value);
-      notifyListeners();
+      parsedData = jsonDecode(readableData); // Parse JSON
     } catch (e) {
-      notifyListeners();
+      print("Data is not JSON: $e");
+      parsedData = readableData; // Fallback to string if not JSON
     }
+
+    notifyListeners(); // Notify listeners if needed
+    return parsedData; // Return the parsed data
+  } catch (e) {
+    print("Error reading characteristic: $e");
+    throw Exception("Failed to read characteristic: $e"); // Rethrow the error
   }
+}
+
+
 }

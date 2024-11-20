@@ -138,25 +138,24 @@ class _BluetoothSettingsPageState extends State<BluetoothSettingsPage> {
     }
   }
 
-  Future<void> _readCharacteristic(
-      BluetoothCharacteristic characteristic) async {
-    final bluetoothManager =
-        Provider.of<BluetoothManager>(context, listen: false);
-    try {
-      await bluetoothManager.readCharacteristic(characteristic);
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Read: ${characteristic.lastValueStream}')),
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error reading characteristic: $e')),
-        );
-      }
+Future<void> _readCharacteristic(BluetoothCharacteristic characteristic) async {
+  final bluetoothManager =
+      Provider.of<BluetoothManager>(context, listen: false);
+  try {
+    dynamic readableData = await bluetoothManager.readCharacteristic(characteristic); // Get readable data
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("$readableData")),
+      );
+    }
+  } catch (e) {
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error reading characteristic: $e')),
+      );
     }
   }
+}
 
   @override
   void dispose() {
