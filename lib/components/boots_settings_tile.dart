@@ -6,6 +6,7 @@ class BootsSettingsTile extends StatelessWidget {
   final String settingsTitle;
   final String settingsSubtitle;
   final VoidCallback? onTap;
+  final Widget? trailing; // Optional trailing widget
 
   const BootsSettingsTile({
     super.key,
@@ -14,6 +15,7 @@ class BootsSettingsTile extends StatelessWidget {
     required this.settingsTitle,
     required this.settingsSubtitle,
     this.onTap,
+    this.trailing,
   });
 
   @override
@@ -41,7 +43,7 @@ class BootsSettingsTile extends StatelessWidget {
               style: const TextStyle(fontWeight: FontWeight.bold),
             ),
             subtitle: Text(settingsSubtitle),
-            trailing: const Icon(Icons.chevron_right), // Trailing > icon
+            trailing: trailing,
           ),
         ),
       ),

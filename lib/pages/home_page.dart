@@ -73,6 +73,7 @@ class _HomePageState extends State<HomePage> {
           settingsSubtitle:
               "Temp: ${heatingData['temperature']}°C | Heating: ${heatingData['heatingStatus']}",
           onTap: () => _onTileTapped(0),
+          trailing: const Icon(Icons.chevron_right),
         ),
         BootsSettingsTile(
           icon: Icons.battery_charging_full,
@@ -81,6 +82,7 @@ class _HomePageState extends State<HomePage> {
           settingsSubtitle:
               "Level: ${batteryData['batteryLevel']}% | Charging: ${batteryData['chargingStatus'] == true ? 'Yes' : 'No'}",
           onTap: () => _onTileTapped(1),
+          trailing: const Icon(Icons.chevron_right),
         ),
         BootsSettingsTile(
           icon: Icons.power_settings_new,
@@ -88,6 +90,7 @@ class _HomePageState extends State<HomePage> {
           settingsTitle: "Power",
           settingsSubtitle: "Power: ${powerData['powerStatus']}",
           onTap: () => _onTileTapped(2),
+          trailing: const Icon(Icons.chevron_right),
         ),
         BootsSettingsTile(
           icon: Icons.bluetooth,
@@ -96,8 +99,9 @@ class _HomePageState extends State<HomePage> {
           settingsSubtitle:
               "Connected: ${bluetoothManager.connectedDevice != null ? 'Yes' : 'No'}",
           onTap: () => _onTileTapped(3),
+          trailing: const Icon(Icons.chevron_right),
         ),
-      ],
+     ],
     );
   }
 

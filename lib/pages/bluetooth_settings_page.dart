@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
+import 'package:footfurnace/components/boots_settings_tile.dart';
 import 'package:provider/provider.dart'; // Import Provider
 import 'package:footfurnace/providers/bluetooth_manager.dart'; // Import BluetoothManager
 
@@ -8,6 +9,7 @@ class BluetoothSettingsPage extends StatefulWidget {
   const BluetoothSettingsPage({super.key});
 
   @override
+  // ignore: library_private_types_in_public_api
   _BluetoothSettingsPageState createState() => _BluetoothSettingsPageState();
 }
 
@@ -138,24 +140,26 @@ class _BluetoothSettingsPageState extends State<BluetoothSettingsPage> {
     }
   }
 
-Future<void> _readCharacteristic(BluetoothCharacteristic characteristic) async {
-  final bluetoothManager =
-      Provider.of<BluetoothManager>(context, listen: false);
-  try {
-    dynamic readableData = await bluetoothManager.readCharacteristic(characteristic); // Get readable data
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("$readableData")),
-      );
-    }
-  } catch (e) {
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error reading characteristic: $e')),
-      );
+  Future<void> _readCharacteristic(
+      BluetoothCharacteristic characteristic) async {
+    final bluetoothManager =
+        Provider.of<BluetoothManager>(context, listen: false);
+    try {
+      dynamic readableData = await bluetoothManager
+          .readCharacteristic(characteristic); // Get readable data
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("$readableData")),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error reading characteristic: $e')),
+        );
+      }
     }
   }
-}
 
   @override
   void dispose() {
@@ -234,12 +238,14 @@ Future<void> _readCharacteristic(BluetoothCharacteristic characteristic) async {
                                 TextButton(
                                   onPressed: () =>
                                       Navigator.of(context).pop(false),
-                                  child: const Text("Cancel", style: TextStyle(color: Colors.black)),
+                                  child: const Text("Cancel",
+                                      style: TextStyle(color: Colors.black)),
                                 ),
                                 TextButton(
                                   onPressed: () =>
                                       Navigator.of(context).pop(true),
-                                  child: const Text("Confirm", style: TextStyle(color: Colors.red)),
+                                  child: const Text("Confirm",
+                                      style: TextStyle(color: Colors.red)),
                                 ),
                               ],
                             ),
@@ -256,12 +262,14 @@ Future<void> _readCharacteristic(BluetoothCharacteristic characteristic) async {
                         });
                       }
                     },
-                    child: const Text("Disconnect", style: TextStyle(color: Colors.red)),
+                    child: const Text("Disconnect",
+                        style: TextStyle(color: Colors.red)),
                   );
                 } else {
                   return ElevatedButton(
                     onPressed: isScanning ? null : _startScan,
-                    child: Text(isScanning ? "Scanning..." : "Scan", style: const TextStyle(color: Colors.blue)),
+                    child: Text(isScanning ? "Scanning..." : "Scan",
+                        style: const TextStyle(color: Colors.blue)),
                   );
                 }
               },
@@ -277,7 +285,9 @@ Future<void> _readCharacteristic(BluetoothCharacteristic characteristic) async {
             if (isScanning) {
               return const Expanded(
                 child: Center(
-                  child: CircularProgressIndicator(color: Colors.blue,),
+                  child: CircularProgressIndicator(
+                    color: Colors.blue,
+                  ),
                 ),
               );
             }
@@ -309,9 +319,13 @@ Future<void> _readCharacteristic(BluetoothCharacteristic characteristic) async {
                           itemCount: _characteristics.length,
                           itemBuilder: (context, index) {
                             final characteristic = _characteristics[index];
-                            return _buildTile(
+                            return BootsSettingsTile(
                               icon: Icons.data_object,
-                              title: characteristic.uuid.toString(),
+                              iconContainerColor: Colors
+                                  .green, // Customize icon container color
+                              settingsTitle: characteristic.uuid.toString(),
+                              settingsSubtitle:
+                                  "Tap to read", // Add a helpful subtitle
                               onTap: () => _readCharacteristic(characteristic),
                             );
                           },
@@ -326,11 +340,14 @@ Future<void> _readCharacteristic(BluetoothCharacteristic characteristic) async {
                   itemCount: _devicesList.length,
                   itemBuilder: (context, index) {
                     final device = _devicesList[index];
-                    return _buildTile(
-                      title: device.platformName.isNotEmpty
+                    return BootsSettingsTile(
+                      icon: Icons.devices, // Customize icon if needed
+                      iconContainerColor:
+                          Colors.blue, // Customize color if needed
+                      settingsTitle: device.platformName.isNotEmpty
                           ? device.platformName
                           : 'Unknown Device',
-                      subtitle: 'ID: ${device.remoteId}',
+                      settingsSubtitle: 'ID: ${device.remoteId}',
                       onTap: () => _connectToDevice(device),
                     );
                   },
