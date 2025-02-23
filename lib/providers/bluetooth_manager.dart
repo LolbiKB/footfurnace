@@ -63,22 +63,18 @@ class BluetoothManager extends ChangeNotifier {
       await device.connect();
       _connectedDevice = device;
 
+      // Add disconnection listener
+      _addDisconnectionListener(device);
+
       // Discover services
       List<BluetoothService> services = await device.discoverServices();
       _characteristics = [];
-      print("Discovered Services:");
       for (var service in services) {
-        print("Service UUID: ${service.uuid}");
         if (service.uuid.toString().toUpperCase() ==
             _targetServiceUUID.toUpperCase()) {
           for (var characteristic in service.characteristics) {
-            print("  Characteristic UUID: ${characteristic.uuid}");
             _characteristics.add(characteristic);
-
-            // Immediately read the characteristic value
             await _readAndStoreCharacteristicValue(characteristic);
-
-            // Subscribe based on characteristic UUID
             if (characteristic.uuid.toString().toUpperCase() ==
                 _batteryUUID.toUpperCase()) {
               _subscribeToCharacteristic(characteristic, "Battery");
@@ -93,12 +89,9 @@ class BluetoothManager extends ChangeNotifier {
         }
       }
 
-      if (_characteristics.isNotEmpty) {
-        _statusMessage = "Connected to ${device.platformName}";
-      } else {
-        _statusMessage = "No characteristics found for target UUID";
-      }
-
+      _statusMessage = _characteristics.isNotEmpty
+          ? "Connected to ${device.platformName}"
+          : "No characteristics found for target UUID";
       notifyListeners();
     } catch (e) {
       if (_connectedDevice != null) {
@@ -108,61 +101,82 @@ class BluetoothManager extends ChangeNotifier {
     }
   }
 
-// Helper method to read and store the characteristic value
-Future<void> _readAndStoreCharacteristicValue(
-    BluetoothCharacteristic characteristic) async {
-  try {
-    List<int> value = await characteristic.read();
-    final data = String.fromCharCodes(value);
+  void _addDisconnectionListener(BluetoothDevice device) {
+    var subscription =
+        device.connectionState.listen((BluetoothConnectionState state) async {
+      if (state == BluetoothConnectionState.disconnected) {
+        // Handle disconnection
+        print(
+            "Disconnected: ${device.disconnectReason?.code} - ${device.disconnectReason?.description}");
 
-    // Check and log UUID comparison for debugging
-    final uuid = characteristic.uuid.toString().toUpperCase();
-    if (uuid == _batteryUUID.toUpperCase()) {
-      _batteryData = _parseCharacteristicData(data);
-    } else if (uuid == _heatingUUID.toUpperCase()) {
-      _heatingData = _parseCharacteristicData(data);;
-    } else if (uuid == _powerUUID.toUpperCase()) {
-      _powerData = _parseCharacteristicData(data);
-    } else {
-    }
-
-    // Notify listeners of updates
-    notifyListeners();
-  } catch (e) {
-    print("Error reading characteristic: $e");
+        // Clean up resources
+        _connectedDevice = null;
+        _characteristics.clear();
+        _subscriptions.forEach((_, subscription) => subscription.cancel());
+        _subscriptions.clear();
+        _batteryData = {};
+        _heatingData = {};
+        _powerData = {};
+        _statusMessage = "Disconnected";
+        notifyListeners();
+      }
+    });
   }
-}
 
-
-  // Subscribe to a characteristic and parse data
-void _subscribeToCharacteristic(
-    BluetoothCharacteristic characteristic, String characteristicName) {
-  characteristic.setNotifyValue(true).then((_) {
-    final subscription = characteristic.onValueReceived.listen((value) {
+// Helper method to read and store the characteristic value
+  Future<void> _readAndStoreCharacteristicValue(
+      BluetoothCharacteristic characteristic) async {
+    try {
+      List<int> value = await characteristic.read();
       final data = String.fromCharCodes(value);
 
-      // Update specific data based on the characteristic
-      switch (characteristicName) {
-        case "Battery":
-          _batteryData = _parseCharacteristicData(data);
-          break;
-        case "Heating":
-          _heatingData = _parseCharacteristicData(data);
-          break;
-        case "Power":
-          _powerData = _parseCharacteristicData(data);
-          break;
-      }
-      notifyListeners();
-    });
+      // Check and log UUID comparison for debugging
+      final uuid = characteristic.uuid.toString().toUpperCase();
+      if (uuid == _batteryUUID.toUpperCase()) {
+        _batteryData = _parseCharacteristicData(data);
+      } else if (uuid == _heatingUUID.toUpperCase()) {
+        _heatingData = _parseCharacteristicData(data);
+        ;
+      } else if (uuid == _powerUUID.toUpperCase()) {
+        _powerData = _parseCharacteristicData(data);
+      } else {}
 
-    // Cancel subscription when device disconnects
-    _connectedDevice!.cancelWhenDisconnected(subscription);
-    _subscriptions[characteristic.uuid.toString()] = subscription;
-  }).catchError((e) {
-    print("Failed to set notifications for $characteristicName: $e");
-  });
-}
+      // Notify listeners of updates
+      notifyListeners();
+    } catch (e) {
+      print("Error reading characteristic: $e");
+    }
+  }
+
+  // Subscribe to a characteristic and parse data
+  void _subscribeToCharacteristic(
+      BluetoothCharacteristic characteristic, String characteristicName) {
+    characteristic.setNotifyValue(true).then((_) {
+      final subscription = characteristic.onValueReceived.listen((value) {
+        final data = String.fromCharCodes(value);
+
+        // Update specific data based on the characteristic
+        switch (characteristicName) {
+          case "Battery":
+            _batteryData = _parseCharacteristicData(data);
+            break;
+          case "Heating":
+            _heatingData = _parseCharacteristicData(data);
+            break;
+          case "Power":
+            _powerData = _parseCharacteristicData(data);
+            break;
+        }
+        notifyListeners();
+      });
+
+      // Cancel subscription when device disconnects
+      _connectedDevice!.cancelWhenDisconnected(subscription);
+      _subscriptions[characteristic.uuid.toString()] = subscription;
+    }).catchError((e) {
+      print("Failed to set notifications for $characteristicName: $e");
+    });
+  }
 
   // Helper to parse JSON data from characteristic
   Map<String, dynamic> _parseCharacteristicData(String data) {
@@ -191,30 +205,29 @@ void _subscribeToCharacteristic(
   }
 
   // Read data from a characteristic
-Future<dynamic> readCharacteristic(BluetoothCharacteristic characteristic) async {
-  try {
-    // Read raw data
-    List<int> value = await characteristic.read();
-
-    // Convert to readable format
-    String readableData = String.fromCharCodes(value);
-
-    // Attempt to parse as JSON if applicable
-    dynamic parsedData;
+  Future<dynamic> readCharacteristic(
+      BluetoothCharacteristic characteristic) async {
     try {
-      parsedData = jsonDecode(readableData); // Parse JSON
+      // Read raw data
+      List<int> value = await characteristic.read();
+
+      // Convert to readable format
+      String readableData = String.fromCharCodes(value);
+
+      // Attempt to parse as JSON if applicable
+      dynamic parsedData;
+      try {
+        parsedData = jsonDecode(readableData); // Parse JSON
+      } catch (e) {
+        print("Data is not JSON: $e");
+        parsedData = readableData; // Fallback to string if not JSON
+      }
+
+      notifyListeners(); // Notify listeners if needed
+      return parsedData; // Return the parsed data
     } catch (e) {
-      print("Data is not JSON: $e");
-      parsedData = readableData; // Fallback to string if not JSON
+      print("Error reading characteristic: $e");
+      throw Exception("Failed to read characteristic: $e"); // Rethrow the error
     }
-
-    notifyListeners(); // Notify listeners if needed
-    return parsedData; // Return the parsed data
-  } catch (e) {
-    print("Error reading characteristic: $e");
-    throw Exception("Failed to read characteristic: $e"); // Rethrow the error
   }
-}
-
-
 }
