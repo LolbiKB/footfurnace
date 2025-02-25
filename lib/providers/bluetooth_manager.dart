@@ -230,4 +230,47 @@ class BluetoothManager extends ChangeNotifier {
       throw Exception("Failed to read characteristic: $e"); // Rethrow the error
     }
   }
+
+  Future<void> setTargetTemperature(double temperature) async {
+    try {
+      if (_connectedDevice == null) {
+        throw Exception('No device connected');
+      }
+
+      final heatingCharacteristic = _characteristics.firstWhere(
+        (c) => c.uuid.toString().toUpperCase() == _heatingUUID.toUpperCase(),
+        orElse: () => throw Exception('Heating characteristic not found'),
+      );
+
+      final data = jsonEncode({
+        'targetTemperature': temperature,
+      });
+
+      await heatingCharacteristic.write(utf8.encode(data));
+      _statusMessage = 'Target temperature set to ${temperature.toStringAsFixed(1)}°C';
+      notifyListeners();
+    } catch (e) {
+      _statusMessage = 'Failed to set temperature: $e';
+      notifyListeners();
+      rethrow;
+    }
+  }
+
+  void _handleHeatingData(List<int> value) {
+    try {
+      final data = utf8.decode(value);
+      final jsonData = json.decode(data);
+      _heatingData = Map<String, dynamic>.from(jsonData);
+      
+      // Make sure targetTemperature is included in the received data
+      if (!_heatingData.containsKey('targetTemperature')) {
+        _heatingData['targetTemperature'] = 25.0;
+      }
+      
+      notifyListeners();
+    } catch (e) {
+      _statusMessage = 'Error parsing heating data: $e';
+      notifyListeners();
+    }
+  }
 }
